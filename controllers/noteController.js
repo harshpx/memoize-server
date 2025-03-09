@@ -5,7 +5,7 @@ import User from "../models/userModel.js";
 // @access  Private
 export const createNote = async (req, res) => {
   try {
-    const { id, title, content, color, pinned } = req.body;
+    const { id, title, content, color, status, pinned } = req.body;
 
     if (!title.trim() && !title.trim()) {
       return res
@@ -22,7 +22,7 @@ export const createNote = async (req, res) => {
           Math.random().toString(36).substring(2) +
           "-" +
           Math.random().toString(36).substring(2),
-      status: "active", // active, archived
+      status: status || "active", // active, archived
       title: title.trim(),
       content: content.trim(),
       color: color || "#171717",
