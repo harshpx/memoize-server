@@ -192,11 +192,7 @@ export const getUser = (req, res) => {
 export const updateAvatar = async (req, res) => {
   try {
     const { avatar } = req.body;
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user._id,
-      { avatar },
-      { new: true }
-    );
+    const updatedUser = await User.findByIdAndUpdate(req.user._id, { avatar });
     if (updatedUser) {
       res.status(200).json({
         success: true,
