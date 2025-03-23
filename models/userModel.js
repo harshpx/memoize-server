@@ -1,6 +1,4 @@
 import mongoose from "mongoose";
-import defaultAvatar from "./defaultAvatar.js";
-
 
 const UserSchema = new mongoose.Schema(
   {
@@ -21,7 +19,7 @@ const UserSchema = new mongoose.Schema(
     },
     avatar: {
       type: String,
-      default: defaultAvatar,
+      default: "https://i.imgur.com/8GO2mo5.png",
     },
     notes: {
       type: [Object],
