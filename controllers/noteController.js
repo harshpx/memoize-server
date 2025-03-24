@@ -159,3 +159,31 @@ export const deleteNote = async (req, res) => {
     });
   }
 };
+
+// @desc    push all created notes from local storage to database
+// @route   POST /api/note/push
+// @access  Private
+export const pushNotes = async (req, res) => {
+  try {
+    const { notes } = req.body;
+    const user = await User.findById(req.user._id);
+    if (user) {
+      user.notes = notes;
+      await user.save();
+      return res.status(200).json({
+        success: true,
+        message: "Notes pushed successfully",
+        notes: user.notes,
+      });
+    } else {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Unable to push notes; " + error.message,
+    });
+  }
+};
