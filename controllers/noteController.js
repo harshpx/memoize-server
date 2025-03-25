@@ -1,4 +1,5 @@
 import User from "../models/userModel.js";
+import { deepCompareArrays } from "../utils/commonMethods.js";
 
 // @desc    Create a new note
 // @route   POST /api/note/create
@@ -168,6 +169,13 @@ export const pushNotes = async (req, res) => {
     const { notes } = req.body;
     const user = await User.findById(req.user._id);
     if (user) {
+      if (deepCompareArrays(user.notes, notes)) {
+        return res.status(200).json({
+          success: true,
+          message: "Notes are already up to date",
+          notes: user.notes,
+        });
+      }
       user.notes = notes;
       await user.save();
       return res.status(200).json({
