@@ -1,6 +1,7 @@
 import User from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import { deepEqual } from "../utils/commonMethods.js";
 
 const generateToken = (id) => {
   const token = jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -192,31 +193,20 @@ export const getUser = (req, res) => {
 export const updateAvatar = async (req, res) => {
   try {
     const { avatar } = req.body;
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user._id,
-      { avatar },
-      { new: true }
-    );
-    if (updatedUser) {
-      res.status(200).json({
+    if (req.user.avatar === avatar) {
+      return res.status(200).json({
         success: true,
-        message: "Avatar updated successfully",
-        user: {
-          _id: updatedUser._id,
-          username: updatedUser.username,
-          email: updatedUser.email,
-          avatar: updatedUser.avatar,
-          notes: updatedUser.notes,
-          todos: updatedUser.todos,
-          checklists: updatedUser.checklists,
-        },
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        message: "Unable to update avatar",
+        message: "Avatar is already up to date",
+        user: req.user,
       });
     }
+    req.user.avatar = avatar;
+    await req.user.save();
+    return res.status(200).json({
+      success: true,
+      message: "Avatar updated successfully",
+      user: req.user,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -244,5 +234,48 @@ export const deleteUser = async (req, res) => {
     res
       .status(500)
       .json({ message: "Unable to delete user; " + error.message });
+  }
+};
+
+// @desc    sync user data
+// @route   PUT /api/user/sync
+// @access  Private
+export const syncUserData = async (req, res) => {
+  try {
+    const { incomingUserData } = req.body;
+    let flag = false;
+    if (req.user.avatar !== incomingUserData.avatar) {
+      req.user.avatar = incomingUserData.avatar;
+      flag = true;
+    }
+    if (!deepEqual(req.user.todos, incomingUserData.todos)) {
+      req.user.notes = incomingUserData.notes;
+      flag = true;
+    }
+    if (!deepEqual(req.user.todos, incomingUserData.todos)) {
+      req.user.todos = incomingUserData.todos;
+      flag = true;
+    }
+    if (!deepEqual(req.user.checklists, incomingUserData.checklists)) {
+      req.user.checklists = incomingUserData.checklists;
+      flag = true;
+    }
+    if (flag) {
+      await req.user.save();
+      return res.status(200).json({
+        success: true,
+        message: "User data synced successfully",
+      });
+    } else {
+      return res.status(200).json({
+        success: true,
+        message: "User data is already up to date",
+      });
+    }
+  } catch {
+    return res.status(500).json({
+      success: false,
+      message: "Unable to sync user data; " + error.message,
+    });
   }
 };

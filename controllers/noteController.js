@@ -31,21 +31,14 @@ export const createNote = async (req, res) => {
       updatedAt: new Date(),
     };
 
-    const user = await User.findById(req.user._id);
-    if (user) {
-      user.notes.push(newNote);
-      await user.save();
-      return res.status(201).json({
-        success: true,
-        message: "Note created successfully",
-        newNote,
-        notes: user.notes,
-      });
-    } else {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-    }
+    req.user.notes.push(newNote);
+    await req.user.save();
+    return res.status(201).json({
+      success: true,
+      message: "Note created successfully",
+      newNote,
+      notes: req.user.notes,
+    });
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -69,49 +62,35 @@ export const updateNote = async (req, res) => {
     }
     // if title & content are empty, delete note
     if (!title.trim() && !content.trim()) {
-      const user = await User.findById(req.user._id);
-      if (user) {
-        user.notes = user.notes.filter((note) => note.id !== id);
-        await user.save();
-        return res.status(200).json({
-          success: true,
-          message: "Note deleted successfully",
-          notes: user.notes,
-        });
-      } else {
-        return res
-          .status(404)
-          .json({ success: false, message: "User not found" });
-      }
-    }
-    // if everything is correctly passed, update note
-    const user = await User.findById(req.user._id);
-    if (user) {
-      user.notes = user.notes.map((note) =>
-        note.id === id
-          ? {
-              ...note,
-              title: title.trim(),
-              content: content.trim(),
-              color: color || "#171717",
-              pinned: pinned ?? false,
-              status: status || "active",
-              updatedAt: new Date(),
-            }
-          : note
-      );
-      await user.save();
+      req.user.notes = req.user.notes.filter((note) => note.id !== id);
+      await req.user.save();
       return res.status(200).json({
         success: true,
-        message: "Note updated successfully",
-        updatedNote: user.notes.find((note) => note.id === id),
-        notes: user.notes,
+        message: "Note deleted successfully",
+        notes: req.user.notes,
       });
-    } else {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
     }
+    // if everything is correctly passed, update note
+    req.user.notes = req.user.notes.map((note) =>
+      note.id === id
+        ? {
+            ...note,
+            title: title.trim(),
+            content: content.trim(),
+            color: color || "#171717",
+            pinned: pinned ?? false,
+            status: status || "active",
+            updatedAt: new Date(),
+          }
+        : note
+    );
+    await req.user.save();
+    return res.status(200).json({
+      success: true,
+      message: "Note updated successfully",
+      updatedNote: req.user.notes.find((note) => note.id === id),
+      notes: req.user.notes,
+    });
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -133,26 +112,19 @@ export const deleteNote = async (req, res) => {
         .json({ success: false, message: "Note id not provided" });
     }
 
-    const user = await User.findById(req.user._id);
-    if (user) {
-      const targetNote = user.notes.find((note) => note.id === id);
-      if (!targetNote) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Note not found / deleted" });
-      }
-      user.notes = user.notes.filter((note) => note.id !== id);
-      await user.save();
-      return res.status(200).json({
-        success: true,
-        message: "Note deleted successfully",
-        notes: user.notes,
-      });
-    } else {
+    const targetNote = req.user.notes.find((note) => note.id === id);
+    if (!targetNote) {
       return res
         .status(404)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: "Note not found / deleted" });
     }
+    req.user.notes = req.user.notes.filter((note) => note.id !== id);
+    await req.user.save();
+    return res.status(200).json({
+      success: true,
+      message: "Note deleted successfully",
+      notes: req.user.notes,
+    });
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -167,27 +139,20 @@ export const deleteNote = async (req, res) => {
 export const pushNotes = async (req, res) => {
   try {
     const { notes } = req.body;
-    const user = await User.findById(req.user._id);
-    if (user) {
-      if (deepEqual(user.notes, notes)) {
-        return res.status(200).json({
-          success: true,
-          message: "Notes are already up to date",
-          notes: user.notes,
-        });
-      }
-      user.notes = notes;
-      await user.save();
+    if (deepEqual(req.user.notes, notes)) {
       return res.status(200).json({
         success: true,
-        message: "Notes pushed successfully",
-        notes: user.notes,
+        message: "Notes are already up to date",
+        notes: req.user.notes,
       });
-    } else {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
     }
+    req.user.notes = notes;
+    await req.user.save();
+    return res.status(200).json({
+      success: true,
+      message: "Notes pushed successfully",
+      notes: req.user.notes,
+    });
   } catch (error) {
     return res.status(500).json({
       success: false,
