@@ -242,13 +242,13 @@ export const deleteUser = async (req, res) => {
 // @access  Private
 export const syncUserData = async (req, res) => {
   try {
-    const { incomingUserData } = req.body;
+    const { user: incomingUserData } = req.body;
     let flag = false;
     if (req.user.avatar !== incomingUserData.avatar) {
       req.user.avatar = incomingUserData.avatar;
       flag = true;
     }
-    if (!deepEqual(req.user.todos, incomingUserData.todos)) {
+    if (!deepEqual(req.user.notes, incomingUserData.notes)) {
       req.user.notes = incomingUserData.notes;
       flag = true;
     }
@@ -272,7 +272,7 @@ export const syncUserData = async (req, res) => {
         message: "User data is already up to date",
       });
     }
-  } catch {
+  } catch(error) {
     return res.status(500).json({
       success: false,
       message: "Unable to sync user data; " + error.message,

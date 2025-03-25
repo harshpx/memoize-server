@@ -6,6 +6,7 @@ import {
   getUser,
   loginUser,
   registerUser,
+  syncUserData,
   updateAvatar,
 } from "../controllers/userController.js";
 import protectRoute from "../middlewares/authHandler.js";
@@ -21,5 +22,6 @@ userRoutes.route("/check-email-availability").post(checkEmailAvailability);
 userRoutes.route("/fetch-user").get(protectRoute, getUser);
 userRoutes.route("/update-avatar").put(protectRoute, updateAvatar);
 userRoutes.route("/delete-user").delete(protectRoute, deleteUser);
+userRoutes.route("/sync").put(protectRoute, syncUserData);
 
 export default userRoutes;
