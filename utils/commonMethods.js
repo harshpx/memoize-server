@@ -19,3 +19,26 @@ export const deepEqual = (val1, val2) => {
   }
   return true;
 };
+
+export const syncArray = (clientArray, serverArray) => {
+  const objectMap = new Map();
+
+  clientArray.forEach((clientObject) => {
+    objectMap.set(clientObject.id, clientObject);
+  });
+
+  serverArray.forEach((serverObject) => {
+    if (!objectMap.has(serverObject.id)) {
+      objectMap.set(serverObject.id, serverObject);
+    } else {
+      const clientObject = objectMap.get(serverObject.id);
+      if (clientObject.updatedAt.getTime() < serverObject.updatedAt.getTime()) {
+        objectMap.set(serverObject.id, serverObject);
+      }
+    }
+  });
+
+  const syncedArray = Array.from(objectMap.values());
+  syncedArray.filter((object) => !object.deleted);
+  return syncedArray;
+};

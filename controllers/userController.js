@@ -1,7 +1,7 @@
 import User from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { deepEqual } from "../utils/commonMethods.js";
+import { deepEqual, syncArray } from "../utils/commonMethods.js";
 
 const generateToken = (id) => {
   const token = jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -193,14 +193,14 @@ export const getUser = (req, res) => {
 export const updateAvatar = async (req, res) => {
   try {
     const { avatar } = req.body;
-    if (req.user.avatar === avatar) {
+    if (req.user.avatar.url === avatar) {
       return res.status(200).json({
         success: true,
         message: "Avatar is already up to date",
         user: req.user,
       });
     }
-    req.user.avatar = avatar;
+    req.user.avatar.url = avatar;
     await req.user.save();
     return res.status(200).json({
       success: true,
@@ -244,35 +244,38 @@ export const syncUserData = async (req, res) => {
   try {
     const { user: incomingUserData } = req.body;
     let flag = false;
-    if (req.user.avatar !== incomingUserData.avatar) {
-      req.user.avatar = incomingUserData.avatar;
+    // Sync avatar
+    if (req.user.avatar?.url != incomingUserData.avatar?.url) {
+      if (
+        incomingUserData.avatar?.updatedAt.getTime() >
+        req.user.avatar?.updatedAt.getTime()
+      ) {
+        req.user.avatar.url = incomingUserData.avatar?.url;
+        flag = true;
+      }
+    }
+    // Sync notes
+    const syncedNotesArray = syncArray(incomingUserData.notes, req.user.notes);
+    if (JSON.stringify(req.user.notes) !== JSON.stringify(syncedNotesArray)) {
+      req.user.notes = syncedNotesArray;
       flag = true;
     }
-    if (!deepEqual(req.user.notes, incomingUserData.notes)) {
-      req.user.notes = incomingUserData.notes;
-      flag = true;
-    }
-    if (!deepEqual(req.user.todos, incomingUserData.todos)) {
-      req.user.todos = incomingUserData.todos;
-      flag = true;
-    }
-    if (!deepEqual(req.user.checklists, incomingUserData.checklists)) {
-      req.user.checklists = incomingUserData.checklists;
-      flag = true;
-    }
+    // Write code for syncing todos and checklists below.
     if (flag) {
       await req.user.save();
       return res.status(200).json({
         success: true,
         message: "User data synced successfully",
+        user: req.user,
       });
     } else {
       return res.status(200).json({
         success: true,
         message: "User data is already up to date",
+        user: req.user,
       });
     }
-  } catch(error) {
+  } catch (error) {
     return res.status(500).json({
       success: false,
       message: "Unable to sync user data; " + error.message,

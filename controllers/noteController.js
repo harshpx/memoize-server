@@ -1,5 +1,5 @@
 import User from "../models/userModel.js";
-import { deepEqual } from "../utils/commonMethods.js";
+import { deepEqual, syncArray } from "../utils/commonMethods.js";
 
 // @desc    Create a new note
 // @route   POST /api/note/create
@@ -136,27 +136,31 @@ export const deleteNote = async (req, res) => {
 // @desc    push all created notes from local storage to database
 // @route   POST /api/note/push
 // @access  Private
-export const pushNotes = async (req, res) => {
+export const syncNotes = async (req, res) => {
   try {
     const { notes } = req.body;
-    if (deepEqual(req.user.notes, notes)) {
+    const syncedNotes = syncArray(notes, req.user.notes);
+    if (
+      syncedNotes.length === req.user.notes.length &&
+      JSON.stringify(syncedNotes) === JSON.stringify(req.user.notes)
+    ) {
       return res.status(200).json({
         success: true,
-        message: "Notes are already up to date",
+        message: "Notes are already synced",
         notes: req.user.notes,
       });
     }
-    req.user.notes = notes;
+    req.user.notes = syncedNotes;
     await req.user.save();
     return res.status(200).json({
       success: true,
-      message: "Notes pushed successfully",
+      message: "Notes synced successfully",
       notes: req.user.notes,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: "Unable to push notes; " + error.message,
+      message: "Unable to sync notes; " + error.message,
     });
   }
 };

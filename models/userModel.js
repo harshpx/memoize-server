@@ -18,8 +18,12 @@ const UserSchema = new mongoose.Schema(
       unique: true,
     },
     avatar: {
-      type: String,
-      default: "https://i.imgur.com/8GO2mo5.png",
+      url: {
+        type: String,
+        default: "https://i.imgur.com/8GO2mo5.png",
+        required: true,
+      },
+      updatedAt: { type: Date, default: Date.now },
     },
     notes: {
       type: [Object],
@@ -37,6 +41,13 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true, minimize: false }
 );
 
+UserSchema.pre("save", function (next) {
+  if (this.isModified("avatar.url")) {
+    this.avatar.updatedAt = new Date();
+  }
+  next();
+});
+
 const User = mongoose.model("User", UserSchema);
 export default User;
 
@@ -47,6 +58,7 @@ export default User;
 //   content: String,
 //   pinned: Boolean,
 //   color: String,
+//   deleted: Boolean,
 //   updatedAt: Date
 // }
 // const todoSchema = {
