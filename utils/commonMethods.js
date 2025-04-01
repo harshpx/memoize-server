@@ -24,10 +24,12 @@ export const syncArray = (clientArray, serverArray) => {
   const objectMap = new Map();
 
   clientArray.forEach((clientObject) => {
+    clientObject.updatedAt = new Date(clientObject.updatedAt);
     objectMap.set(clientObject.id, clientObject);
   });
 
   serverArray.forEach((serverObject) => {
+    serverObject.updatedAt = new Date(serverObject.updatedAt);
     if (!objectMap.has(serverObject.id)) {
       objectMap.set(serverObject.id, serverObject);
     } else {
@@ -39,6 +41,5 @@ export const syncArray = (clientArray, serverArray) => {
   });
 
   const syncedArray = Array.from(objectMap.values());
-  syncedArray.filter((object) => !object.deleted);
-  return syncedArray;
+  return syncedArray.filter((object) => !object.deleted);
 };

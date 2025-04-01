@@ -8,7 +8,7 @@ export const createNote = async (req, res) => {
   try {
     const { id, title, content, color, status, pinned } = req.body;
 
-    if (!title.trim() && !title.trim()) {
+    if (!title.trim() && !content.trim()) {
       return res
         .status(400)
         .json({ success: false, message: "Title and content cannot be empty" });
