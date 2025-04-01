@@ -118,7 +118,9 @@ export const deleteNote = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Note not found / deleted" });
     }
-    req.user.notes = req.user.notes.filter((note) => note.id !== id);
+    req.user.notes = req.user.notes.map((note) =>
+      note.id === id ? { ...note, deleted: true, updatedAt: new Date() } : note
+    );
     await req.user.save();
     return res.status(200).json({
       success: true,
