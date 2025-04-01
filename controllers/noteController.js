@@ -28,6 +28,7 @@ export const createNote = async (req, res) => {
       content: content.trim(),
       color: color || "#171717",
       pinned: pinned ?? false,
+      deleted: false,
       updatedAt: new Date(),
     };
 
