@@ -247,10 +247,13 @@ export const syncUserData = async (req, res) => {
     let flag = false;
     // Sync avatar
     if (req.user.avatar?.url != incomingUserData.avatar?.url) {
-      if (
-        incomingUserData.avatar?.updatedAt.getTime() >
-        req.user.avatar?.updatedAt.getTime()
-      ) {
+      const serverAvatarUpdateTime = new Date(
+        req.user.avatar?.updatedAt
+      ).getTime();
+      const clientAvatarUpdateTime = new Date(
+        incomingUserData.avatar?.updatedAt
+      ).getTime();
+      if (clientAvatarUpdateTime > serverAvatarUpdateTime) {
         req.user.avatar.url = incomingUserData.avatar?.url;
         flag = true;
       }
