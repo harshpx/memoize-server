@@ -134,7 +134,7 @@ export const deleteNote = async (req, res) => {
 };
 
 // @desc    push all created notes from local storage to database
-// @route   POST /api/note/push
+// @route   PUT /api/note/sync
 // @access  Private
 export const syncNotes = async (req, res) => {
   try {

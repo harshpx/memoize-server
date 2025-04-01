@@ -192,12 +192,13 @@ export const getUser = (req, res) => {
 // @access  Private
 export const updateAvatar = async (req, res) => {
   try {
+    // takes avatar string from request body
     const { avatar } = req.body;
     if (req.user.avatar.url === avatar) {
       return res.status(200).json({
         success: true,
         message: "Avatar is already up to date",
-        user: req.user,
+        avatar: req.user.avatar,
       });
     }
     req.user.avatar.url = avatar;
@@ -205,7 +206,7 @@ export const updateAvatar = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Avatar updated successfully",
-      user: req.user,
+      avatar: req.user.avatar,
     });
   } catch (error) {
     res.status(500).json({
