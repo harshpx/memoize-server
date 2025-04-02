@@ -260,7 +260,7 @@ export const syncUserData = async (req, res) => {
     }
     // Sync notes
     const syncedNotesArray = syncArray(incomingUserData.notes, req.user.notes);
-    if (JSON.stringify(req.user.notes) !== JSON.stringify(syncedNotesArray)) {
+    if (!deepEqual(req.user.notes, syncedNotesArray)) {
       req.user.notes = syncedNotesArray;
       flag = true;
     }
