@@ -260,25 +260,25 @@ export const syncUserData = async (req, res) => {
     }
     // Sync notes
     const syncedNotesArray = syncArray(incomingUserData.notes, req.user.notes);
-    if (!deepEqual(req.user.notes, syncedNotesArray)) {
+    // if (!deepEqual(req.user.notes, syncedNotesArray)) {
       req.user.notes = syncedNotesArray;
-      flag = true;
-    }
+      // flag = true;
+    // }
     // Write code for syncing todos and checklists below.
-    if (flag) {
+    // if (flag) {
       await req.user.save();
       return res.status(200).json({
         success: true,
         message: "User data synced successfully",
         user: req.user,
       });
-    } else {
-      return res.status(200).json({
-        success: true,
-        message: "User data is already up to date",
-        user: req.user,
-      });
-    }
+    // } else {
+      // return res.status(200).json({
+      //   success: true,
+      //   message: "User data is already up to date",
+      //   user: req.user,
+      // });
+    // }
   } catch (error) {
     return res.status(500).json({
       success: false,
