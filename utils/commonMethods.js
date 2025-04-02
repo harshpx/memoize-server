@@ -40,6 +40,23 @@ export const syncArray = (clientArray, serverArray) => {
     }
   });
 
+  serverArray.forEach((serverObject) => {
+    serverObject.updatedAt = new Date(serverObject.updatedAt);
+    objectMap.set(serverObject.id, serverObject);
+  });
+
+  clientArray.forEach((clientObject) => {
+    clientObject.updatedAt = new Date(clientObject.updatedAt);
+    if (!objectMap.has(clientObject.id)) {
+      objectMap.set(clientObject.id, clientObject);
+    } else {
+      const serverObject = objectMap.get(clientObject.id);
+      if (clientObject.updatedAt.getTime() > serverObject.updatedAt.getTime()) {
+        objectMap.set(clientObject.id, clientObject);
+      }
+    }
+  });
+
   const syncedArray = Array.from(objectMap.values());
-  return syncedArray.filter((object) => !object.deleted);
+  return syncedArray;
 };
