@@ -2,6 +2,7 @@ import User from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { deepEqual, syncArray } from "../utils/commonMethods.js";
+import sendEmail from "../utils/sendEmail.js";
 
 const generateToken = (id) => {
   const token = jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -283,6 +284,90 @@ export const syncUserData = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Unable to sync user data; " + error.message,
+    });
+  }
+};
+
+// @desc send reset password email
+// @route POST /api/user/send-reset-password
+// @access Public
+export const sendResetPasswordEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      const token = jwt.sign(
+        { email: userExists.email },
+        process.env.JWT_SECRET,
+        { expiresIn: "10m" }
+      );
+      const text = `Link to reset password of your Memoize account:\n\nhttps://www.memoize.in/reset-password?uat=${token}\n\nRegards,\nTeam Memoize`;
+      const subject = "Reset password of your memoize account";
+
+      const emailResponse = await sendEmail(email, subject, text);
+      return res.status(200).json({
+        success: true,
+        message: "Reset password email sent successfully",
+        response: emailResponse,
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: "User with this email does not exist",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Unable to send reset password email; " + error.message,
+    });
+  }
+};
+
+export const checkResetPasswordToken = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Token is required",
+      });
+    }
+
+    const { email } = jwt.verify(token, process.env.JWT_SECRET);
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Appropriate data not found in token / Invalid token",
+      });
+    }
+
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      userExists.password = hashedPassword;
+      await userExists.save();
+      return res.status(200).json({
+        success: true,
+        message: "Password updated successfully",
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: "User with this email does not exist",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Unable to update password; " + error.message,
     });
   }
 };
