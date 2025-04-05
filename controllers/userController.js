@@ -331,6 +331,9 @@ export const sendResetPasswordEmail = async (req, res) => {
   }
 };
 
+// @desc check reset password token
+// @route PUT /api/user/check-reset-password-token
+// @access Public
 export const checkResetPasswordToken = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
@@ -362,6 +365,118 @@ export const checkResetPasswordToken = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "User with this email does not exist",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Unable to update password; " + error.message,
+    });
+  }
+};
+
+// @update username
+// @route PUT /api/user/update-username
+// @access Private
+export const updateUsername = async (req, res) => {
+  try {
+    const { username } = req.body;
+    if (!username) {
+      return res.status(400).json({
+        success: false,
+        message: "Username is required",
+      });
+    }
+
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Username already taken",
+      });
+    }
+
+    req.user.username = username;
+    await req.user.save();
+    return res.status(200).json({
+      success: true,
+      message: "Username updated successfully",
+      user: req.user,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Unable to update username; " + error.message,
+    });
+  }
+};
+
+// @update email
+// @route PUT /api/user/update-email
+// @access Private
+export const updateEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already taken",
+      });
+    }
+
+    req.user.email = email;
+    await req.user.save();
+    return res.status(200).json({
+      success: true,
+      message: "Email updated successfully",
+      user: req.user,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Unable to update email; " + error.message,
+    });
+  }
+};
+
+// @update password
+// @route PUT /api/user/update-password
+// @access Private
+export const updatePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Old and new passwords are required",
+      });
+    }
+
+    const existingUser = await User.findById(req.user._id);
+    const correctPassword = await bcrypt.compare(
+      currentPassword,
+      existingUser.password
+    );
+    if (correctPassword) {
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      existingUser.password = hashedPassword;
+      await existingUser.save();
+      return res.status(200).json({
+        success: true,
+        message: "Password updated successfully",
+      });
+    } else {
+      return res.status(401).json({
+        success: false,
+        message: "Old password is incorrect",
       });
     }
   } catch (error) {
